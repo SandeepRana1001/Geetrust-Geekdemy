@@ -80,6 +80,16 @@ const calculateMembershipDiscount = (courses) => {
 
 
 const getCoupon = (qtyCounter, coupon = '', subTotal) => {
+
+    if (qtyCounter >= 4) {
+        // find course with min price
+        let min = findMinPricedCourse()
+        return {
+            couponName: 'B4G1',
+            discount: min
+        }
+    }
+
     if (coupon.trim().length > 0) {
 
         if (subTotal >= 10000) {
@@ -97,15 +107,6 @@ const getCoupon = (qtyCounter, coupon = '', subTotal) => {
         }
 
 
-    } else {
-        if (qtyCounter >= 4) {
-            // find course with min price
-            let min = findMinPricedCourse()
-            return {
-                couponName: 'B4G1',
-                discount: min
-            }
-        }
     }
 
     return {
