@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path')
 const COURSES = require('./courses')
+
 console.clear()
 
 const dir = path.join(__dirname, 'input.txt')
@@ -27,7 +28,6 @@ const findMin = () => {
     for (let val of courses) {
         min = Math.min(min, COURSES[val.toUpperCase()])
     }
-    console.log(min)
     return min
 }
 
@@ -96,6 +96,7 @@ const getMembershipDiscount = (courses) => {
     }
     return { total, proDiscount }
 }
+
 
 const generateBill = () => {
 
@@ -168,18 +169,17 @@ fs.readFile(dir, 'utf8', (err, data) => {
         }
     }
 
-
     if (hasProMembership) {
         total = getMembershipDiscount(courses).total
         membershipDiscount = getMembershipDiscount(courses).proDiscount
         total += 200
     }
 
-    couponData = getCoupon(qtyCounter, coupon, total)
+    couponData = getCoupon(qtyCounter, coupon, subtotal)
     const couponName = couponData.couponName
     const discount = couponData.discount
 
-    total = total - discount
+    total = subtotal - discount
     if (getEnrollmentFees(total)) {
         total += 6666
     }
