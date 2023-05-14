@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path')
+const COURSES = require('./courses')
 console.clear()
 
 const dir = path.join(__dirname, 'input.txt')
@@ -8,12 +9,13 @@ const dir = path.join(__dirname, 'input.txt')
 
 let total = 0
 const cart = [], courses = []
-let qtyCounter = 0, coupon = '', hasProMembership = false, isenrollmentAdded = false
-const COURSES = {
-    'CERTIFICATION': 3000,
-    'DEGREE': 5000,
-    'DIPLOMA': 2500
-}
+let couponData = {}
+let qtyCounter = 0, coupon = '', hasProMembership = false, isenrollmentAdded = false, subtotal = 0, membershipDiscount = 0
+// const COURSES = {
+//     'CERTIFICATION': 3000,
+//     'DEGREE': 5000,
+//     'DIPLOMA': 2500
+// }
 
 const getPrice = (course, qty) => {
 
@@ -95,6 +97,51 @@ const getMembershipDiscount = (courses) => {
     return { total, proDiscount }
 }
 
+const generateBill = () => {
+
+    /**
+     * Generate Subtotal including course and applied discount
+     *  */
+    console.log(' ________________________________________________________________________________________________')
+    console.log(' | \t\t\t\t\t |\t Qty\t|\tCost\t|\t Amount\t\t|')
+    console.log(' ________________________________________________________________________________________________')
+    for (let string of courses) {
+        let discount = 0
+        const str = string.split('-')
+        const course = str[0]
+        const qty = str[1]
+        const amount = COURSES[course.toUpperCase()]
+        // console.log(`|\t ${course} @ Rs.${amount} \t\t\t|\t ${qty}\t|\t ${amount} \t|\t ${qty * amount} \t \t|`)
+        if (course === 'DIPLOMA' || course === 'DEGREE') {
+            console.log(` |\t ${course} @Rs.${amount}  \t\t |\t ${qty}\t|\t ${amount} \t|\t ${qty * amount}  \t\t| `)
+        } else {
+            console.log(` |\t ${course} @Rs.${amount}  \t |\t ${qty}\t|\t ${amount} \t|\t ${qty * amount}  \t\t| `)
+        }
+
+        console.log(' ________________________________________________________________________________________________')
+    }
+
+    console.log(` | \t SUB_TOTAL\t\t\t |\t\t|\t\t|\t ${subtotal} \t \t|`)
+    console.log(' ________________________________________________________________________________________________')
+
+    console.log(` | \t PRO MEMBERSHIP FEE \t\t |\t\t|\t\t|\t ${hasProMembership ? 200 : 0.00} \t \t|`)
+    console.log(' ________________________________________________________________________________________________')
+
+    console.log(` | \t ENROLLMENT FEE \t\t |\t\t|\t\t|\t ${isenrollmentAdded ? 6666 : 0.00} \t \t|`)
+    console.log(' ________________________________________________________________________________________________')
+
+    console.log(` | \t TOTAL_PRO_DISCOUNT \t\t |\t\t|\t\t|\t ${membershipDiscount} \t \t|`)
+    console.log(' ________________________________________________________________________________________________')
+
+    console.log(` | \t COUPON_DISCOUNT(${couponData.couponName}) \t |\t\t|\t\t|\t ${couponData.discount} \t\t|`)
+    console.log(' ________________________________________________________________________________________________')
+
+    console.log(` | \t Total \t\t\t\t |\t\t|\t\t|\t ${total} \t\t|`)
+    console.log(' ________________________________________________________________________________________________')
+
+
+}
+
 
 fs.readFile(dir, 'utf8', (err, data) => {
     if (err) {
@@ -113,7 +160,7 @@ fs.readFile(dir, 'utf8', (err, data) => {
             let certificate = val[1]
             courses.push(certificate + '-' + qty)
             qtyCounter += parseInt(qty)
-            total += getPrice(certificate, qty)
+            subtotal += getPrice(certificate, qty)
         } else if (type === 'APPLY_COUPON') {
             coupon = val[1]
         } else if (type === 'ADD_PRO_MEMBERSHIP') {
@@ -124,21 +171,19 @@ fs.readFile(dir, 'utf8', (err, data) => {
 
     if (hasProMembership) {
         total = getMembershipDiscount(courses).total
-        let discount = getMembershipDiscount(courses).proDiscount
+        membershipDiscount = getMembershipDiscount(courses).proDiscount
         total += 200
-        console.log('Membership Total = ' + total)
-        console.log('Membership discount = ' + discount)
     }
 
-    const { couponName, discount } = getCoupon(qtyCounter, coupon, total)
-    console.log('Total = ' + total)
-    console.log('Coupon Name = ' + couponName)
-    console.log('Discount = ' + discount)
+    couponData = getCoupon(qtyCounter, coupon, total)
+    const couponName = couponData.couponName
+    const discount = couponData.discount
+
     total = total - discount
-    console.log(isenrollmentAdded)
     if (getEnrollmentFees(total)) {
         total += 6666
     }
-    console.log('Total After Discount = ' + total)
+
+    generateBill()
 
 });
