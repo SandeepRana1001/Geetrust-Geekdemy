@@ -7,7 +7,6 @@ const generateBill = (courses, COURSES_LIST, subtotal, hasProMembership, isenrol
     console.log(' | \t\t\t\t\t |\t Qty\t|\tCost\t|\t Amount\t\t|')
     console.log(' ________________________________________________________________________________________________')
     for (let string of courses) {
-        let discount = 0
         const str = string.split('-')
         const course = str[0]
         const qty = str[1]
@@ -45,7 +44,6 @@ const generateBill = (courses, COURSES_LIST, subtotal, hasProMembership, isenrol
 
     console.log(` | \t Total \t\t\t\t |\t\t|\t\t|\t ${total.toFixed(2)}\t|`)
     console.log(' ________________________________________________________________________________________________')
-
 
 }
 

@@ -1,14 +1,9 @@
 const fs = require('fs');
 const path = require('path')
-const readline = require('readline');
-
 const COURSES_LIST = require('./courses')
-const {
-    isEnrollmentFeeRequired,
-    calculatePrice,
-    calculateMembershipDiscount,
-    getCoupon
-} = require('./utility/utils')
+const Utility = require('./utility/utils')
+
+const utils = new Utility();
 
 const generateBill = require('./functions/generateBill')
 
@@ -43,6 +38,7 @@ let couponData = {}
 let qtyCounter = 0, coupon = '', hasProMembership = false, isenrollmentAdded = false, subtotal = 0, membershipDiscount = 0
 
 fs.readFile(dir, 'utf8', (err, data) => {
+
     if (err) {
         console.error('Error reading the file:', err);
         return;
@@ -62,7 +58,7 @@ fs.readFile(dir, 'utf8', (err, data) => {
             let courseName = val[1] // courseName
             courses.push(courseName + '-' + qty)
             qtyCounter += parseInt(qty)
-            subtotal += calculatePrice(courseName, qty)
+            subtotal += utils.calculatePrice(courseName, qty)
 
         } else if (type === 'APPLY_COUPON') {
 
@@ -78,18 +74,18 @@ fs.readFile(dir, 'utf8', (err, data) => {
     // check if proMembership is present
 
     if (hasProMembership) {
-        const membership_data = calculateMembershipDiscount(courses)
+        const membership_data = utils.calculateMembershipDiscount(courses)
         total = membership_data.total
         membershipDiscount = membership_data.proDiscount
         total += 200
     }
 
-    couponData = getCoupon(qtyCounter, coupon, subtotal)
+    couponData = utils.getCoupon(qtyCounter, coupon, subtotal)
     const discount = couponData.discount
 
     total = subtotal - discount
 
-    if (isEnrollmentFeeRequired(total)) {
+    if (utils.isEnrollmentFeeRequired(total)) {
         total += 6666
     }
 
