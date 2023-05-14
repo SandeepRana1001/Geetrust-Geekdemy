@@ -5,44 +5,31 @@ const Utility = require('./utility/utils')
 
 const utils = new Utility();
 
-const generateBill = require('./functions/generateBill')
+const billChoice = require('./functions/billChoice');
 
 console.clear()
 
+const filename = process.argv[2]
 
-// get filename from CLI
-
-const fileName = process.argv[2]
-
-if (fileName === undefined) {
+if (filename === undefined) {
     console.log('Cannot Locate The Input File. Please add complete file path with location.')
     console.log('For eg: inputFolder\\filename.fileExtension')
     return;
 }
 
-// check if path is provided or not
-
-let directory = __dirname
-let dir;
-
-if (!fileName.includes(directory)) {
-    dir = path.join(__dirname, fileName)
-} else {
-    dir = fileName
-}
-
-
-let total = 0
-const courses = []
-let couponData = {}
-let qtyCounter = 0, coupon = '', hasProMembership = false, isenrollmentAdded = false, subtotal = 0, membershipDiscount = 0
-
-fs.readFile(dir, 'utf8', (err, data) => {
+fs.readFile(filename, "utf8", (err, data) => {
+    /*if (err) throw err
+    var inputLines = data.toString().split("\n")
+    // Add your code here to process input commands
+    */
 
     if (err) {
         console.error('Error reading the file:', err);
         return;
     }
+
+    const courses = []
+    let total = 0, qtyCounter = 0, subtotal = 0, membershipDiscount = 0, hasProMembership = false, isenrollmentAdded = false, coupon = '', couponData = {}
 
     // Process the incoming data
     const arr = data.replaceAll('\r', '').split('\n')
@@ -57,6 +44,7 @@ fs.readFile(dir, 'utf8', (err, data) => {
             let qty = val[2] // quantity
             let courseName = val[1] // courseName
             courses.push(courseName + '-' + qty)
+
             qtyCounter += parseInt(qty)
             subtotal += utils.calculatePrice(courseName, qty)
 
@@ -89,6 +77,8 @@ fs.readFile(dir, 'utf8', (err, data) => {
         total += 6666
     }
 
-    generateBill(courses, COURSES_LIST, subtotal, hasProMembership, isenrollmentAdded, membershipDiscount, couponData, total)
+    billChoice(courses, COURSES_LIST, subtotal, hasProMembership, isenrollmentAdded, membershipDiscount, couponData, total)
 
-});
+
+
+})
