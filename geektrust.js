@@ -27,11 +27,13 @@ fs.readFile(filename, "utf8", (err, fileData) => {
         return;
     }
 
-    const courses = []
+    const courses = [], ADD_PRO_MEMBERSHIP = 'ADD_PRO_MEMBERSHIP'
     let total = 0, quantityCounter = 0, subtotal = 0, membershipDiscount = 0, hasProMembership = false, isenrollmentAdded = false, coupon = '', couponData = {}
+
 
     // Process the incoming data
     const inputs = fileData.replaceAll('\r', '').split('\n')
+    hasProMembership = inputs.includes(ADD_PRO_MEMBERSHIP)
 
     for (let input of inputs) {
         input = input.split(' ')
@@ -45,11 +47,19 @@ fs.readFile(filename, "utf8", (err, fileData) => {
             courses.push(courseName + '-' + quantity)
 
             quantityCounter += parseInt(quantity)
-            subtotal += utils.calculatePrice(courseName, quantity)
+            const membershipData = utils.checkAndCalculateMembershipDiscount(hasProMembership, courseName, quantity)
+
+            subtotal += membershipData.totalPrice
+            membershipDiscount += membershipData.proDiscount
+
 
         } else if (type === 'APPLY_COUPON') {
 
-            coupon = input[1]
+            if (coupon === 'DEAL_G20' && input[1] === 'DEAL_G5') {
+                coupon = 'DEAL_G20'
+            } else {
+                coupon = input[1]
+            }
 
         } else if (type === 'ADD_PRO_MEMBERSHIP') {
 
@@ -58,25 +68,26 @@ fs.readFile(filename, "utf8", (err, fileData) => {
         }
     }
 
+
     // check if proMembership is present
 
     if (hasProMembership) {
-        const membership_data = utils.calculateMembershipDiscount(courses)
-        total = membership_data.total
-        membershipDiscount = membership_data.proDiscount
-        total += MEMBERSHIP_FEE
+        subtotal += MEMBERSHIP_FEE
     }
 
-    couponData = utils.getCoupon(quantityCounter, coupon, subtotal)
+
+
+    couponData = utils.getCoupon(quantityCounter, coupon, subtotal, hasProMembership)
     const discount = couponData.discount
 
     total = subtotal - discount
 
     if (utils.isEnrollmentFeeRequired(total)) {
         total += ENROLLMENT_CHARGES
+        isenrollmentAdded = true
     }
 
-    billChoice(courses, COURSES_LIST, subtotal, hasProMembership, isenrollmentAdded, membershipDiscount, couponData, total)
+    billChoice(subtotal, hasProMembership, isenrollmentAdded, membershipDiscount, couponData, total)
 
 
 

@@ -7,7 +7,7 @@ class Utility {
     */
     constructor() {
         this.ENROLLMENT_FEE = 6666
-        this.DISCOUNT = {
+        this.MEMBERSHIP_DISCOUNT = {
             'CERTIFICATION': 0.02,
             'DEGREE': 0.03,
             'DIPLOMA': 0.01
@@ -22,6 +22,7 @@ class Utility {
         this.DEAL_G5_MIN_QUANTITY = 2
         this.DEAL_G20_DISCOUNT = 0.2
         this.DEAL_G5_DISCOUNT = 0.05
+
     }
 
     /**
@@ -37,17 +38,29 @@ class Utility {
         return false
     }
 
+    calculateDiscount = (discount, hasMembership) => {
+        let finalDiscount = discount
+        if (hasMembership) {
+            finalDiscount = this.MEMBERSHIP_DISCOUNT + discount
+            return finalDiscount
+        }
+    }
+
     /**
      * 
      * @returns {Number} Price of The lowest priced programme
      */
 
     findMinPricedCourse = () => {
-        let min = Infinity
+        let min = Infinity, name = ''
         for (let course of Object.keys(COURSES_LIST)) {
-            min = Math.min(min, COURSES_LIST[course.toUpperCase()])
+            const price = COURSES_LIST[course.toUpperCase()]
+            if (price < min) {
+                min = price
+                name = course.toUpperCase()
+            }
         }
-        return min
+        return name
     }
 
 
@@ -65,24 +78,24 @@ class Utility {
 
     /**
      * 
-     * @param {Array} courses  - Contains the Array of the courses added in cart
-     * @returns 
+     * @param {Boolean} hasMembership True is PRO Membership is applied and false otherwise
+     * @param {String} course - Contains the name of the course added in cart
+     * @param {Number} qty - Contains the qty of the course added in cart
+     * @returns {Object} - Total Price and Total Membership discount
      */
 
-    calculateMembershipDiscount = (courses) => {
-        let total = 0, proDiscount = 0
-        for (let string of courses) {
-            let discount = 0
-            const str = string.split('-')
-            const course = str[0].toUpperCase()
-            const qty = str[1]
-            let prices = COURSES_LIST[course] * qty
+    checkAndCalculateMembershipDiscount = (hasMembership, course, qty = 1) => {
 
-            proDiscount = proDiscount + (prices * this.DISCOUNT[course])
-            prices = prices - (prices * discount)
-            total += prices
+        let totalPrice = COURSES_LIST[course.toUpperCase()] * qty
+        let proDiscount = 0
+
+        if (!hasMembership) {
+            return { totalPrice, proDiscount }
         }
-        return { total, proDiscount }
+
+        proDiscount = totalPrice * this.MEMBERSHIP_DISCOUNT[course]
+        totalPrice = totalPrice - proDiscount
+        return { totalPrice, proDiscount }
     }
 
 
@@ -97,40 +110,42 @@ class Utility {
      */
 
 
-    getCoupon = (qtyCounter, coupon = '', subTotal) => {
+    getCoupon = (qtyCounter, coupon = '', subTotal, hasMembership = false) => {
 
         if (qtyCounter >= this.B4G1_MIN_QUANTITY) {
             // find course with min price
-            let min = this.findMinPricedCourse()
+            let minimumPricedCourse = this.findMinPricedCourse()
+            const result = this.checkAndCalculateMembershipDiscount(hasMembership, minimumPricedCourse)
             return {
                 couponName: this.COUPONNAME.B4G1,
-                discount: min
+                discount: result.totalPrice
+            }
+        } else if (this.COUPONNAME.DEAL_G20 === coupon && subTotal >= this.DEAL_G20_MIN_SUBTOTAL) {
+
+            const discount = (subTotal * this.DEAL_G20_DISCOUNT)
+            return {
+                couponName: this.COUPONNAME.DEAL_G20,
+                discount
+            }
+
+        } else if (this.COUPONNAME.DEAL_G5 === coupon && qtyCounter >= this.DEAL_G5_MIN_QUANTITY) {
+
+            const discount = (subTotal * this.DEAL_G5_DISCOUNT)
+            return {
+                couponName: this.COUPONNAME.DEAL_G5,
+                discount
+            }
+
+        } else {
+
+            return {
+                couponName: 'NONE',
+                discount: 0
             }
         }
 
-        if (coupon.trim().length > 0) {
-
-            if (subTotal >= this.DEAL_G20_MIN_SUBTOTAL) {
-                const discount = (subTotal * this.DEAL_G20_DISCOUNT)
-                return {
-                    couponName: this.COUPONNAME.DEAL_G20,
-                    discount
-                }
-            } else if (qtyCounter >= this.DEAL_G5_MIN_QUANTITY) {
-                const discount = (subTotal * this.DEAL_G5_DISCOUNT)
-                return {
-                    couponName: this.COUPONNAME.DEAL_G5,
-                    discount
-                }
-            }
 
 
-        }
-
-        return {
-            couponName: '',
-            discount: 0
-        }
 
     }
 }
