@@ -1,6 +1,28 @@
-const COURSES_LIST = require('../courses')
+const { COURSES_LIST } = require('../globalVariables')
 
 class Utility {
+
+    /**
+     * Initialized the utility variables whenever the object is created.
+    */
+    constructor() {
+        this.ENROLLMENT_FEE = 6666
+        this.DISCOUNT = {
+            'CERTIFICATION': 0.02,
+            'DEGREE': 0.03,
+            'DIPLOMA': 0.01
+        }
+        this.COUPONNAME = {
+            'B4G1': 'B4G1',
+            'DEAL_G20': 'DEAL_G20',
+            'DEAL_G5': 'DEAL_G5'
+        }
+        this.B4G1_MIN_QUANTITY = 4
+        this.DEAL_G20_MIN_SUBTOTAL = 10000
+        this.DEAL_G5_MIN_QUANTITY = 2
+        this.DEAL_G20_DISCOUNT = 0.2
+        this.DEAL_G5_DISCOUNT = 0.05
+    }
 
     /**
      * 
@@ -9,7 +31,7 @@ class Utility {
      */
 
     isEnrollmentFeeRequired = (subTotal) => {
-        if (subTotal < 6666) {
+        if (subTotal < this.ENROLLMENT_FEE) {
             return true
         }
         return false
@@ -55,14 +77,8 @@ class Utility {
             const course = str[0].toUpperCase()
             const qty = str[1]
             let prices = COURSES_LIST[course] * qty
-            if (course === 'CERTIFICATION') {
-                discount = 0.02
-            } else if (course === 'DEGREE') {
-                discount = 0.03
-            } else if (course === 'DIPLOMA') {
-                discount = 0.01
-            }
-            proDiscount = proDiscount + (prices * discount)
+
+            proDiscount = proDiscount + (prices * this.DISCOUNT[course])
             prices = prices - (prices * discount)
             total += prices
         }
@@ -83,27 +99,27 @@ class Utility {
 
     getCoupon = (qtyCounter, coupon = '', subTotal) => {
 
-        if (qtyCounter >= 4) {
+        if (qtyCounter >= this.B4G1_MIN_QUANTITY) {
             // find course with min price
             let min = this.findMinPricedCourse()
             return {
-                couponName: 'B4G1',
+                couponName: this.COUPONNAME.B4G1,
                 discount: min
             }
         }
 
         if (coupon.trim().length > 0) {
 
-            if (subTotal >= 10000) {
-                const discount = (subTotal * 0.2)
+            if (subTotal >= this.DEAL_G20_MIN_SUBTOTAL) {
+                const discount = (subTotal * this.DEAL_G20_DISCOUNT)
                 return {
-                    couponName: 'DEAL_G20',
+                    couponName: this.COUPONNAME.DEAL_G20,
                     discount
                 }
-            } else if (qtyCounter >= 2) {
-                const discount = (subTotal * 0.5)
+            } else if (qtyCounter >= this.DEAL_G5_MIN_QUANTITY) {
+                const discount = (subTotal * this.DEAL_G5_DISCOUNT)
                 return {
-                    couponName: 'DEAL_G5',
+                    couponName: this.COUPONNAME.DEAL_G5,
                     discount
                 }
             }

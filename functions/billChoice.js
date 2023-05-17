@@ -1,6 +1,18 @@
 const readline = require('readline');
+const { FIXED_DECIMAL_POSITION, isMembershipRequired, isEnrollmentFeeRequired } = require('../globalVariables')
+
 const generateBill = require('./generateBill');
 const geekTrustOutput = require('./geekTrustOutput')
+
+const INVALID_INPUT = 'Invalid Input Provided'
+
+const PROMPTS = ['Welcome To The Billing System \n ', '1. Geektrust Output Format', '2. Proper Bill Format']
+
+const QUESTION = '\nPlease select a bill format : '
+const OPTIONS = {
+    'ONE': '1',
+    'TWO': '2'
+}
 
 /**
  * Generate Subtotal including course and applied discount
@@ -22,25 +34,31 @@ const billChoice = (courses, COURSES_LIST, subtotal, hasProMembership, isenrollm
         output: process.stdout
     });
 
-    console.log('Welcome To The Billing System \n ')
-    console.log('1. Geektrust Output Format')
-    console.log('2. Proper Bill Format')
+    for (let prompt of PROMPTS) {
+        console.log(prompt);
+    }
 
 
-    rl.question('\nPlease select a bill format : ', (answer) => {
+    const PRO_MEMBERSHIP_FEE = isMembershipRequired(hasProMembership)
+    const ENROLLMENT_FEE = isEnrollmentFeeRequired(isenrollmentAdded)
+
+
+
+    rl.question(QUESTION, (answer) => {
 
         console.clear()
 
         switch (answer) {
-            case '1':
-                geekTrustOutput(subtotal, hasProMembership, isenrollmentAdded, membershipDiscount, couponData, total)
+            case OPTIONS.ONE:
+                geekTrustOutput(subtotal, PRO_MEMBERSHIP_FEE, ENROLLMENT_FEE, membershipDiscount, couponData, total)
                 break;
 
-            case '2':
-                generateBill(courses, COURSES_LIST, subtotal, hasProMembership, isenrollmentAdded, membershipDiscount, couponData, total)
+            case OPTIONS.TWO:
+                generateBill(courses, COURSES_LIST, subtotal, PRO_MEMBERSHIP_FEE, ENROLLMENT_FEE, membershipDiscount, couponData, total)
                 break;
 
             default:
+                console.log(INVALID_INPUT)
                 break;
         }
 

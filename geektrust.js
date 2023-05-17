@@ -1,6 +1,5 @@
 const fs = require('fs');
-const path = require('path')
-const COURSES_LIST = require('./courses')
+const { COURSES_LIST, MEMBERSHIP_FEE, ENROLLMENT_CHARGES } = require('./globalVariables')
 const Utility = require('./utility/utils')
 
 const utils = new Utility();
@@ -17,7 +16,7 @@ if (filename === undefined) {
     return;
 }
 
-fs.readFile(filename, "utf8", (err, data) => {
+fs.readFile(filename, "utf8", (err, fileData) => {
     /*if (err) throw err
     var inputLines = data.toString().split("\n")
     // Add your code here to process input commands
@@ -29,28 +28,28 @@ fs.readFile(filename, "utf8", (err, data) => {
     }
 
     const courses = []
-    let total = 0, qtyCounter = 0, subtotal = 0, membershipDiscount = 0, hasProMembership = false, isenrollmentAdded = false, coupon = '', couponData = {}
+    let total = 0, quantityCounter = 0, subtotal = 0, membershipDiscount = 0, hasProMembership = false, isenrollmentAdded = false, coupon = '', couponData = {}
 
     // Process the incoming data
-    const arr = data.replaceAll('\r', '').split('\n')
+    const inputs = fileData.replaceAll('\r', '').split('\n')
 
-    for (let val of arr) {
-        val = val.split(' ')
+    for (let input of inputs) {
+        input = input.split(' ')
 
-        let type = val[0] // type of file
+        let type = input[0] // type of file
 
         if (type === 'ADD_PROGRAMME') {
 
-            let qty = val[2] // quantity
-            let courseName = val[1] // courseName
-            courses.push(courseName + '-' + qty)
+            let quantity = input[2] // quantity
+            let courseName = input[1] // courseName
+            courses.push(courseName + '-' + quantity)
 
-            qtyCounter += parseInt(qty)
-            subtotal += utils.calculatePrice(courseName, qty)
+            quantityCounter += parseInt(quantity)
+            subtotal += utils.calculatePrice(courseName, quantity)
 
         } else if (type === 'APPLY_COUPON') {
 
-            coupon = val[1]
+            coupon = input[1]
 
         } else if (type === 'ADD_PRO_MEMBERSHIP') {
 
@@ -65,16 +64,16 @@ fs.readFile(filename, "utf8", (err, data) => {
         const membership_data = utils.calculateMembershipDiscount(courses)
         total = membership_data.total
         membershipDiscount = membership_data.proDiscount
-        total += 200
+        total += MEMBERSHIP_FEE
     }
 
-    couponData = utils.getCoupon(qtyCounter, coupon, subtotal)
+    couponData = utils.getCoupon(quantityCounter, coupon, subtotal)
     const discount = couponData.discount
 
     total = subtotal - discount
 
     if (utils.isEnrollmentFeeRequired(total)) {
-        total += 6666
+        total += ENROLLMENT_CHARGES
     }
 
     billChoice(courses, COURSES_LIST, subtotal, hasProMembership, isenrollmentAdded, membershipDiscount, couponData, total)
